@@ -472,6 +472,7 @@ COPY vllm/v1 /usr/local/lib/python${PYTHON_VERSION}/dist-packages/vllm/v1
 # Source code is used in the `python_only_compile.sh` test
 # We hide it inside `src/` so that this source code
 # will not be imported by other tests
+ARG DUMMY_ARG=0
 RUN mkdir src
 RUN mv vllm src/vllm
 #################### TEST IMAGE ####################
