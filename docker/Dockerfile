@@ -82,18 +82,35 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG GET_PIP_URL
 
-# Install system dependencies and uv, then create Python virtual environment
-RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
-    && echo 'tzdata tzdata/Zones/America select Los_Angeles' | debconf-set-selections \
-    && apt-get update -y \
-    && apt-get install -y ccache software-properties-common git curl sudo python3-pip \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && $HOME/.local/bin/uv venv /opt/venv --python ${PYTHON_VERSION} \
-    && rm -f /usr/bin/python3 /usr/bin/python3-config /usr/bin/pip \
-    && ln -s /opt/venv/bin/python3 /usr/bin/python3 \
-    && ln -s /opt/venv/bin/python3-config /usr/bin/python3-config \
-    && ln -s /opt/venv/bin/pip /usr/bin/pip \
-    && python3 --version && python3 -m pip --version
+# (A) APT + system deps
+RUN apt-get update -y \
+ && apt-get install -y \
+      ccache software-properties-common git curl sudo python3-pip
+
+# (B) Fetch uv installer (don’t run it)
+ADD https://astral.sh/uv/install.sh /tmp/uv_install.sh
+
+# (C) Run uv + venv + symlinks
+RUN sh /tmp/uv_install.sh \
+ && $HOME/.local/bin/uv venv /opt/venv --python ${PYTHON_VERSION} \
+ && rm -f /usr/bin/python3 /usr/bin/python3-config /usr/bin/pip \
+ && ln -s /opt/venv/bin/python3 /usr/bin/python3 \
+ && ln -s /opt/venv/bin/python3-config /usr/bin/python3-config \
+ && ln -s /opt/venv/bin/pip /usr/bin/pip \
+ && python3 --version && python3 -m pip --version
+
+# # Install system dependencies and uv, then create Python virtual environment
+# RUN echo 'tzdata tzdata/Areas select America' | debconf-set-selections \
+#     && echo 'tzdata tzdata/Zones/America select Los_Angeles' | debconf-set-selections \
+#     && apt-get update -y \
+#     && apt-get install -y ccache software-properties-common git curl sudo python3-pip \
+#     && curl -LsSf https://astral.sh/uv/install.sh | sh \
+#     && $HOME/.local/bin/uv venv /opt/venv --python ${PYTHON_VERSION} \
+#     && rm -f /usr/bin/python3 /usr/bin/python3-config /usr/bin/pip \
+#     && ln -s /opt/venv/bin/python3 /usr/bin/python3 \
+#     && ln -s /opt/venv/bin/python3-config /usr/bin/python3-config \
+#     && ln -s /opt/venv/bin/pip /usr/bin/pip \
+#     && python3 --version && python3 -m pip --version
 
 ARG PIP_INDEX_URL UV_INDEX_URL
 ARG PIP_EXTRA_INDEX_URL UV_EXTRA_INDEX_URL
@@ -450,7 +467,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV HF_HUB_ENABLE_HF_TRANSFER 1
 
 # Copy in the v1 package for testing (it isn't distributed yet)
-ARG DUMMNY_ARG=1
 COPY vllm/v1 /usr/local/lib/python${PYTHON_VERSION}/dist-packages/vllm/v1
 
 # Source code is used in the `python_only_compile.sh` test
