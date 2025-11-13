@@ -450,7 +450,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV HF_HUB_ENABLE_HF_TRANSFER 1
 
 # Copy in the v1 package for testing (it isn't distributed yet)
-ARG DUMMNY_ARG=0
+ARG DUMMNY_ARG=1
 COPY vllm/v1 /usr/local/lib/python${PYTHON_VERSION}/dist-packages/vllm/v1
 
 # Source code is used in the `python_only_compile.sh` test
