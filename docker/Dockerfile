@@ -83,9 +83,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ARG GET_PIP_URL
 
 # (A) APT + system deps
-RUN apt-get update -y \
- && apt-get install -y \
-      ccache software-properties-common git curl sudo python3-pip
+# Freeze APT sources to a deterministic snapshot date
+ARG UBUNTU_SNAPSHOT_DATE=20251113
+RUN rm -rf /var/lib/apt/lists/* \
+    && sed -i "s|http://archive.ubuntu.com/ubuntu|https://snapshot.ubuntu.com/${UBUNTU_SNAPSHOT_DATE}/ubuntu|g" /etc/apt/sources.list \
+    && sed -i "s|http://security.ubuntu.com/ubuntu|https://snapshot.ubuntu.com/${UBUNTU_SNAPSHOT_DATE}/ubuntu|g" /etc/apt/sources.list \
+    && apt-get update -y \
+    && apt-get install -y ccache software-properties-common git curl sudo python3-pip
 
 # (B) Fetch uv installer (don’t run it)
 ADD https://astral.sh/uv/install.sh /tmp/uv_install.sh
